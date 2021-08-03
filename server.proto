@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package jobsvr;
+option go_package = ".;jobsvr";
+import "job.proto";
+
+service JobManager {
+  rpc PostJob(PostJobReq) returns (PostJobResp){}
+  rpc PostJobs(PostJobsReq) returns (PostJobsResp){}
+  rpc ListenQueue(ListenQueueReq) returns (stream JobStream){}
+}

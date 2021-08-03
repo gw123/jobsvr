@@ -1,0 +1,58 @@
+syntax = "proto3";
+package  jobsvr;
+option go_package = ".;jobsvr";
+
+// 任务
+message Job {
+  string uuid    = 1;
+  int32  delay   = 2;
+  string name    = 3;
+  bytes  payload = 4;
+  int64  timestamp = 5;
+}
+
+//
+message PostJobReq {
+    Job job  = 1;
+}
+
+//
+message PostJobResp {
+  string uuid = 1; // uuid
+  int32  code  = 2; // 错误码，200:成功；其他:失败
+  string msg  = 3; // 错误内容
+}
+
+//
+message PostJobsReq {
+  repeated Job job  = 1;
+}
+
+//
+message PostJobsResp {
+  string uuid = 1; // uuid
+  int32  code  = 2; // 错误码，200:成功；其他:失败
+  string msg  = 3; // 错误内容
+}
+
+// 任务
+message ListenQueueReq {
+  string uuid    = 1;
+  string name    = 2;
+  int64  timestamp = 3;
+  int32  size = 4; //限制每次数据流推送的最大任务数量
+}
+
+message JobStream {
+  string jobName = 1;
+  int32  length = 2;
+  repeated Job job = 3;
+}
+
+
+
+
+
+
+
+
