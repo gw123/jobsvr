@@ -46,3 +46,4 @@ cmd/crontabs/cron_job.go
 redis-6.0.8/
 *.yaml.json
 dump.rdb
+.env

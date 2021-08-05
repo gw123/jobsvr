@@ -5,7 +5,7 @@ option go_package = ".;jobsvr";
 // 任务
 message Job {
   string uuid    = 1;
-  int32  delay   = 2;
+  int32  delaySecond   = 2;
   string name    = 3;
   bytes  payload = 4;
   int64  timestamp = 5;
@@ -25,7 +25,8 @@ message PostJobResp {
 
 //
 message PostJobsReq {
-  repeated Job job  = 1;
+  string uuid = 1; // uuid
+  repeated Job jobs  = 2;
 }
 
 //
@@ -33,6 +34,7 @@ message PostJobsResp {
   string uuid = 1; // uuid
   int32  code  = 2; // 错误码，200:成功；其他:失败
   string msg  = 3; // 错误内容
+  repeated Job ErrorJobs  = 4;
 }
 
 // 任务
