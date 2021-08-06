@@ -15,24 +15,36 @@ import (
 const HeaderTraceID = "trace-id"
 
 func actionSend(client jobsvr.JobManagerClient) {
+	ctx := context.Background()
+
 	md := metadata.New(map[string]string{
 		"uuid":     uuid.New().String(),
 		"trace-id": uuid.New().String(), // 这里需要小写大写的字母grpc会自动转为小写
 	})
-	ctx := context.Background()
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	resp, err := client.PostJob(ctx, &jobsvr.PostJobReq{Job: &jobsvr.Job{
-		Uuid:        uuid.New().String(),
-		DelaySecond: 0,
-		Name:        "my_job",
-		Payload:     nil,
-		Timestamp:   0,
-	}})
-	if err != nil {
-		glog.DefaultLogger().Error(err)
-		return
+	var jobs []*jobsvr.Job
+	for i := 0; i < 1000; i++ {
+
+		jobs = append(jobs,
+			&jobsvr.Job{
+				Uuid:        uuid.New().String(),
+				DelaySecond: 0,
+				Name:        "my_job",
+				Payload:     nil,
+				Timestamp:   0,
+			})
+
+		if len(jobs) == 100 {
+			resp, err := client.PostJobs(ctx, &jobsvr.PostJobsReq{Jobs: jobs})
+			if err != nil {
+				glog.DefaultLogger().Error(err)
+				return
+			}
+			glog.DefaultLogger().Infof("resp : %+v", resp)
+			jobs = jobs[:0]
+		}
 	}
-	glog.DefaultLogger().Infof("resp : %+v", resp)
+
 }
 
 func actionListen(client jobsvr.JobManagerClient) {
@@ -65,7 +77,8 @@ func actionListen(client jobsvr.JobManagerClient) {
 }
 
 func main() {
-	serverAddr := "127.0.0.1:8082"
+	//serverAddr := "127.0.0.1:8082"
+	serverAddr := "sh2:8082"
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return

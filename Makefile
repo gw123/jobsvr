@@ -20,11 +20,15 @@ build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags  '-w -s' -o $(APPNAME) ./entry/main.go &&\
 	upx -9 -f -o upload $(APPNAME)
 
+.PHONY: upload
 upload:
 	 scp upload root@sh2:/data/apps/jobsvr
 
 restart:
-	ssh root@sh2 supervisorctl reload
+	ssh root@sh2 supervisorctl restart jobsvr
+
+all: build upload restart
+
 
 build-alpine:
 	@docker run --rm -v "$(PWD)":/go/src/github.com/gw123/jobsvr \

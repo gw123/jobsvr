@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gw123/gworker/rabbiter"
+
 	"github.com/gw123/jobsvr/constant"
 
 	"github.com/gw123/jobsvr/di"
@@ -67,16 +69,15 @@ func (j JobService) PostJob(ctx context.Context, job *jobsvr.Job) error {
 		logger.Errorf("dispatch err %v", err)
 		return errors.Wrap(err, "Dispatch err")
 	}
-	logger.Info("dispatch success")
 	return nil
 }
 
 func (j *JobService) HandelJob(ctx context.Context, req *jobsvr.ListenQueueReq, server jobsvr.JobManager_ListenQueueServer) error {
-	//_ = req.GetSize()
 	queueName := req.GetName()
 	glog.ExtractEntry(server.Context()).Infof("ListenQueue ...")
-
-	j.jm.Do(ctx, req.GetName(), func(ctx context.Context, jobber gworker.Jobber) error {
+	var consumer rabbiter.Consumer
+	var err error
+	consumer, err = j.jm.Do(ctx, req.GetName(), func(ctx context.Context, jobber gworker.Jobber) error {
 		var job jobsvr.Job
 		if err := json.Unmarshal(jobber.Body(), &job); err != nil {
 			return errors.Wrap(err, "json.Unmarshal Job")
@@ -91,10 +92,17 @@ func (j *JobService) HandelJob(ctx context.Context, req *jobsvr.ListenQueueReq, 
 		}
 
 		if err := server.Send(jobStream); err != nil {
-			glog.ExtractEntry(server.Context()).Errorf("jobStream")
+			glog.ExtractEntry(server.Context()).WithError(err).Errorf("send job to client stream err")
+			consumer.Stop()
 			return err
 		}
+
 		return nil
 	})
+
+	if err != nil {
+		glog.ExtractEntry(ctx).WithError(err).Errorf("jm.Do")
+	}
+	consumer.Wait()
 	return nil
 }
